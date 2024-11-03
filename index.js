@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 const pool = new Pool({
   user: 'postgres', //This _should_ be your username, as it's the default one Postgres uses
   host: 'localhost',
-  database: 'MoviesData.sql', //This should be changed to reflect your actual database
+  database: 'moviesrentaldata', //This should be changed to reflect your actual database
   password: '44Aust1n##', //This should be changed to reflect the password you used when setting up Postgres
   port: 5432,
 });
@@ -55,14 +55,28 @@ async function createTable() {
  * @param {string} director Director of the movie
  */
 async function insertMovie(title, year, genre, director) {
-  
+  try {
+    const query = `
+      INSERT INTO movies (title, release_year, genre, director)
+      VALUES ($1, $2, $3, $4);
+    `;
+    await pool.query(query, [title, year, genre, director]);
+    console.log(`Movie "${title}" added successfully.`);
+  } catch (error) {
+    console.error('Error inserting movie:', error);
+  }
 }
 
 /**
  * Prints all movies in the database to the console
  */
 async function displayMovies() {
-  
+  try {
+    const result = await pool.query('SELECT * FROM movies;');
+    console.table(result.rows);
+  } catch (error) {
+    console.error('Error displaying movies:', error);
+  }
 }
 
 /**
