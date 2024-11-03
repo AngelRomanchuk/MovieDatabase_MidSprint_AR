@@ -80,13 +80,67 @@ async function displayMovies() {
 }
 
 /**
+ * Inserts a new customer into the Customers table.
+ * 
+ * @param {string} firstName First name of the customer
+ * @param {string} lastName Last name of the customer
+ * @param {string} email Email address of the customer
+ * @param {string} phone Phone number of the customer
+ */
+async function insertCustomer(firstName, lastName, email, phone) {
+  try {
+    const query = `
+      INSERT INTO customers (first_name, last_name, email, phone)
+      VALUES ($1, $2, $3, $4);
+    `;
+    await pool.query(query, [firstName, lastName, email, phone]);
+    console.log(`Customer "${firstName} ${lastName}" added successfully.`);
+  } catch (error) {
+    console.error('Error inserting customer:', error);
+  }
+}
+
+/**
+ * Displays all customers in the database.
+ */
+async function displayCustomers() {
+  try {
+    const query = `
+      SELECT 
+        customers_id, first_name, last_name, email, phone
+      FROM customers
+      ORDER BY customers_id;
+    `;
+    const result = await pool.query(query);
+    console.table(result.rows);
+  } catch (error) {
+    console.error('Error displaying customers:', error);
+  }
+}
+
+
+/**
  * Updates a customer's email address.
  * 
  * @param {number} customerId ID of the customer
  * @param {string} newEmail New email address of the customer
  */
 async function updateCustomerEmail(customerId, newEmail) {
-  
+  try {
+    const query = `
+      UPDATE customers
+      SET email = $1
+      WHERE customers_id = $2;
+    `;
+    const result = await pool.query(query, [newEmail, customerId]);
+    if (result.rowCount > 0) {
+      console.log(`Customer ${customerId} email updated to "${newEmail}".`);
+    } else {
+      console.log(`Customer ${customerId} not found.`);
+    }
+  } catch (error) {
+    console.error('Error updating customer email:', error);
+  }
 };
 
 /**
@@ -95,7 +149,20 @@ async function updateCustomerEmail(customerId, newEmail) {
  * @param {number} customerId ID of the customer to remove
  */
 async function removeCustomer(customerId) {
-  
+  try {
+    const query = `
+      DELETE FROM customers
+      WHERE customers_id = $1;
+    `;
+    const result = await pool.query(query, [customerId]);
+    if (result.rowCount > 0) {
+      console.log(`Customer ${customerId} removed successfully.`);
+    } else {
+      console.log(`Customer ${customerId} not found.`);
+    }
+  } catch (error) {
+    console.error('Error removing customer:', error);
+  }
 }
 
 /**
@@ -118,14 +185,30 @@ async function runCLI() {
   const args = process.argv.slice(2);
   switch (args[0]) {
     case 'insert':
-      if (args.length !== 5) {
+      if (args.length < 5) {
         printHelp();
         return;
       }
-      await insertMovie(args[1], parseInt(args[2]), args[3], args[4]);
+      if (args[1] === 'movie') {
+        await insertMovie(args[2], parseInt(args[3]), args[4], args[5]);
+      } else if (args[1] === 'customer') {
+        await insertCustomer(args[2], args[3], args[4], args[5]); // Assuming you have this function
+      } else {
+        printHelp();
+      }
       break;
     case 'show':
-      await displayMovies();
+      if (args.length === 2) {
+        if (args[1] === 'movies') {
+          await displayMovies();
+        } else if (args[1] === 'customers') {
+          await displayCustomers();
+        } else {
+          printHelp();
+        }
+      } else {
+        printHelp();
+      }
       break;
     case 'update':
       if (args.length !== 3) {
@@ -146,5 +229,6 @@ async function runCLI() {
       break;
   }
 };
+
 
 runCLI();
