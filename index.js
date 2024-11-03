@@ -4,17 +4,47 @@ const { Pool } = require('pg');
 const pool = new Pool({
   user: 'postgres', //This _should_ be your username, as it's the default one Postgres uses
   host: 'localhost',
-  database: 'your_database_name', //This should be changed to reflect your actual database
-  password: 'your_database_password', //This should be changed to reflect the password you used when setting up Postgres
+  database: 'MoviesData.sql', //This should be changed to reflect your actual database
+  password: '44Aust1n##', //This should be changed to reflect the password you used when setting up Postgres
   port: 5432,
 });
 
 /**
  * Creates the database tables, if they do not already exist.
  */
+// Create Tables if they don't exist
 async function createTable() {
-  // TODO: Add code to create Movies, Customers, and Rentals tables
-};
+  const createMoviesTable = `
+    CREATE TABLE IF NOT EXISTS movies (
+      movies_id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      release_year INTEGER NOT NULL,
+      genre TEXT NOT NULL,
+      director TEXT NOT NULL
+    );
+  `;
+  const createCustomersTable = `
+    CREATE TABLE IF NOT EXISTS customers (
+      customers_id SERIAL PRIMARY KEY,
+      first_name TEXT NOT NULL,
+      last_name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      phone TEXT
+    );
+  `;
+  const createRentalsTable = `
+    CREATE TABLE IF NOT EXISTS rentals (
+      rentals_id SERIAL PRIMARY KEY,
+      customer_id INTEGER REFERENCES customers(customers_id) ON DELETE CASCADE,
+      movie_id INTEGER REFERENCES movies(movies_id),
+      rental_date DATE NOT NULL,
+      return_date DATE
+    );
+  `;
+  await pool.query(createMoviesTable);
+  await pool.query(createCustomersTable);
+  await pool.query(createRentalsTable);
+}
 
 /**
  * Inserts a new movie into the Movies table.
@@ -25,15 +55,15 @@ async function createTable() {
  * @param {string} director Director of the movie
  */
 async function insertMovie(title, year, genre, director) {
-  // TODO: Add code to insert a new movie into the Movies table
-};
+  
+}
 
 /**
  * Prints all movies in the database to the console
  */
 async function displayMovies() {
-  // TODO: Add code to retrieve and print all movies from the Movies table
-};
+  
+}
 
 /**
  * Updates a customer's email address.
@@ -42,7 +72,7 @@ async function displayMovies() {
  * @param {string} newEmail New email address of the customer
  */
 async function updateCustomerEmail(customerId, newEmail) {
-  // TODO: Add code to update a customer's email address
+  
 };
 
 /**
@@ -51,8 +81,8 @@ async function updateCustomerEmail(customerId, newEmail) {
  * @param {number} customerId ID of the customer to remove
  */
 async function removeCustomer(customerId) {
-  // TODO: Add code to remove a customer and their rental history
-};
+  
+}
 
 /**
  * Prints a help message to the console
