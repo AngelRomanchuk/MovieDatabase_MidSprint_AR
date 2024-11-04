@@ -35,7 +35,7 @@ async function createTable() {
   const createRentalsTable = `
     CREATE TABLE IF NOT EXISTS rentals (
       rentals_id SERIAL PRIMARY KEY,
-      customer_id INTEGER REFERENCES customers(customers_id) ON DELETE CASCADE,
+      customer_id INTEGER REFERENCES customers(customers_id),
       movie_id INTEGER REFERENCES movies(movies_id),
       rental_date DATE NOT NULL,
       return_date DATE
@@ -163,7 +163,76 @@ async function removeCustomer(customerId) {
   } catch (error) {
     console.error('Error removing customer:', error);
   }
+};
+
+/**
+ * Rents a movie by creating a new record in the rentals table.
+ * 
+ * @param {number} customerId - ID of the customer renting the movie
+ * @param {number} movieId - ID of the movie to be rented
+ */
+async function rentMovie(customerId, movieId) {
+  try {
+    const rentalDate = new Date().toISOString().split('T')[0];
+    const query = `
+      INSERT INTO rentals (customer_id, movie_id, rental_date)
+      VALUES ($1, $2, $3);
+    `;
+    await pool.query(query, [customerId, movieId, rentalDate]);
+    console.log(`Movie ${movieId} rented to Customer ${customerId} on ${rentalDate}.`);
+  } catch (error) {
+    console.error('Error renting movie:', error);
+  }
 }
+
+/**
+ * Returns a rented movie by updating the return_date in the rentals table.
+ * 
+ * @param {number} rentalId - ID of the rental record
+ */
+async function returnMovie(rentalId) {
+  try {
+    const returnDate = new Date().toISOString().split('T')[0];
+    const query = `
+      UPDATE rentals
+      SET return_date = $1
+      WHERE rentals_id = $2 AND return_date IS NULL;
+    `;
+    const result = await pool.query(query, [returnDate, rentalId]);
+    if (result.rowCount > 0) {
+      console.log(`Rental ${rentalId} returned on ${returnDate}.`);
+    } else {
+      console.log(`Rental ${rentalId} not found or already returned.`);
+    }
+  } catch (error) {
+    console.error('Error returning movie:', error);
+  }
+}
+
+/**
+ * Displays all rentals in the database, including customer and movie details.
+ */
+async function displayRentals() {
+  try {
+    const query = `
+      SELECT 
+        rentals.rentals_id,
+        customers.first_name || ' ' || customers.last_name AS customer_name,
+        movies.title AS movie_title,
+        rentals.rental_date,
+        rentals.return_date
+      FROM rentals
+      JOIN customers ON rentals.customer_id = customers.customers_id
+      JOIN movies ON rentals.movie_id = movies.movies_id
+      ORDER BY rentals.rental_date DESC;
+    `;
+    const result = await pool.query(query);
+    console.table(result.rows);
+  } catch (error) {
+    console.error('Error displaying rentals:', error);
+  }
+}
+
 
 /**
  * Prints a help message to the console
@@ -189,6 +258,10 @@ function printHelp() {
   console.log('    - Displays all customers in the database.');
   console.log('    - Example: node index.js show customers\n');
   
+  console.log('  show rentals');
+  console.log('    - Displays all rentals in the database, including customer and movie details.');
+  console.log('    - Example: node index.js show rentals\n');
+  
   console.log('  update <customer_id> <new_email>');
   console.log('    - Updates a customer\'s email address by customer ID.');
   console.log('    - Example: node index.js update 1 "newemail@example.com"\n');
@@ -197,13 +270,17 @@ function printHelp() {
   console.log('    - Removes a customer and their rental history from the database by customer ID.');
   console.log('    - Example: node index.js remove 1\n');
   
-  console.log('General Information:');
-  console.log('  - Use "node index.js <command>" to run the application.');
-  console.log('  - Ensure all arguments are provided as shown in the examples to avoid errors.');
-  console.log('  - If you encounter issues, check that your PostgreSQL database is running and accessible.');
+  console.log('  rent <customer_id> <movie_id>');
+  console.log('    - Rents a movie to a customer by creating a new rental record.');
+  console.log('    - Example: node index.js rent 1 3\n');
+  
+  console.log('  return <rental_id>');
+  console.log('    - Returns a rented movie by updating the return_date in the rentals table.');
+  console.log('    - Example: node index.js return 1\n');
   
   console.log('===================================');
 }
+
 
 
 /**
@@ -222,7 +299,7 @@ async function runCLI() {
       if (args[1] === 'movie') {
         await insertMovie(args[2], parseInt(args[3]), args[4], args[5]);
       } else if (args[1] === 'customer') {
-        await insertCustomer(args[2], args[3], args[4], args[5]); // Assuming you have this function
+        await insertCustomer(args[2], args[3], args[4], args[5]);
       } else {
         printHelp();
       }
@@ -233,6 +310,8 @@ async function runCLI() {
           await displayMovies();
         } else if (args[1] === 'customers') {
           await displayCustomers();
+        } else if (args[1] === 'rentals') {
+          await displayRentals();
         } else {
           printHelp();
         }
@@ -253,6 +332,20 @@ async function runCLI() {
         return;
       }
       await removeCustomer(parseInt(args[1]));
+      break;
+    case 'rent':
+      if (args.length !== 3) {
+        printHelp();
+        return;
+      }
+      await rentMovie(parseInt(args[1]), parseInt(args[2]));
+      break;
+    case 'return':
+      if (args.length !== 2) {
+        printHelp();
+        return;
+      }
+      await returnMovie(parseInt(args[1]));
       break;
     default:
       printHelp();
