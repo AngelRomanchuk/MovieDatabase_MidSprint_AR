@@ -169,12 +169,42 @@ async function removeCustomer(customerId) {
  * Prints a help message to the console
  */
 function printHelp() {
-  console.log('Usage:');
-  console.log('  insert <title> <year> <genre> <director> - Insert a movie');
-  console.log('  show - Show all movies');
-  console.log('  update <customer_id> <new_email> - Update a customer\'s email');
-  console.log('  remove <customer_id> - Remove a customer from the database');
+  console.log('Movie Rental Database CLI Help');
+  console.log('===================================');
+  console.log('Commands:');
+  
+  console.log('\n  insert movie <title> <year> <genre> <director>');
+  console.log('    - Inserts a new movie into the database.');
+  console.log('    - Example: node index.js insert movie "Inception" 2010 "Sci-Fi" "Christopher Nolan"\n');
+  
+  console.log('  insert customer <first_name> <last_name> <email> <phone>');
+  console.log('    - Inserts a new customer into the database.');
+  console.log('    - Example: node index.js insert customer "John" "Doe" "john@example.com" "123-456-7890"\n');
+  
+  console.log('  show movies');
+  console.log('    - Displays all movies in the database.');
+  console.log('    - Example: node index.js show movies\n');
+  
+  console.log('  show customers');
+  console.log('    - Displays all customers in the database.');
+  console.log('    - Example: node index.js show customers\n');
+  
+  console.log('  update <customer_id> <new_email>');
+  console.log('    - Updates a customer\'s email address by customer ID.');
+  console.log('    - Example: node index.js update 1 "newemail@example.com"\n');
+  
+  console.log('  remove <customer_id>');
+  console.log('    - Removes a customer and their rental history from the database by customer ID.');
+  console.log('    - Example: node index.js remove 1\n');
+  
+  console.log('General Information:');
+  console.log('  - Use "node index.js <command>" to run the application.');
+  console.log('  - Ensure all arguments are provided as shown in the examples to avoid errors.');
+  console.log('  - If you encounter issues, check that your PostgreSQL database is running and accessible.');
+  
+  console.log('===================================');
 }
+
 
 /**
  * Runs our CLI app to manage the movie rentals database
