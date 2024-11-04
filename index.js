@@ -235,6 +235,23 @@ async function displayRentals() {
 
 
 /**
+ * Clears all data from the tables.
+ */
+async function clearData() {
+  try {
+    // Delete all rows from rentals first due to foreign key constraints
+    await pool.query('DELETE FROM rentals;');
+    await pool.query('DELETE FROM customers;');
+    await pool.query('DELETE FROM movies;');
+
+    console.log('All data cleared from movies, customers, and rentals tables.');
+  } catch (error) {
+    console.error('Error clearing data:', error);
+  }
+};
+
+
+/**
  * Prints a help message to the console
  */
 function printHelp() {
@@ -277,6 +294,10 @@ function printHelp() {
   console.log('  return <rental_id>');
   console.log('    - Returns a rented movie by updating the return_date in the rentals table.');
   console.log('    - Example: node index.js return 1\n');
+  
+  console.log('  clear');
+  console.log('    - Clears all data from the movies, customers, and rentals tables.');
+  console.log('    - Example: node index.js clear\n');
   
   console.log('===================================');
 }
@@ -347,11 +368,13 @@ async function runCLI() {
       }
       await returnMovie(parseInt(args[1]));
       break;
+    case 'clear':
+      await clearData();
+      break;
     default:
       printHelp();
       break;
-  }
-};
-
+    }
+  };
 
 runCLI();
